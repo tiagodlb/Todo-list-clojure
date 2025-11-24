@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neo-Brutalist Todo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "neo-bg": "#88AAEE",
+              "neo-red": "#FF6B6B",
+              "neo-green": "#BCF0DA",
+              "neo-yellow": "#FFF4E0",
+              "neo-black": "#000000",
+            },
+            boxShadow: {
+              "neo-sm": "3px 3px 0px 0px rgba(0, 0, 0, 1)",
+              neo: "5px 5px 0px 0px rgba(0, 0, 0, 1)",
+              "neo-lg": "8px 8px 0px 0px rgba(0, 0, 0, 1)",
+            },
+            fontFamily: {
+              mono: ["monospace", "ui-monospace", "SFMono-Regular"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .bg-grid-pattern {
+        background-image: linear-gradient(#000 2px, transparent 2px),
+          linear-gradient(90deg, #000 2px, transparent 2px);
+        background-size: 40px 40px;
+      }
+
+      .completed .todo-text {
+        text-decoration: line-through;
+        text-decoration-thickness: 4px;
+        color: #6b7280;
+      }
+
+      .todo-item {
+        transition: all 0.2s;
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen bg-neo-bg p-4 md:p-8 font-mono relative overflow-hidden text-black"
+  >
+    <div
+      class="absolute inset-0 opacity-10 pointer-events-none bg-grid-pattern"
+    ></div>
+
+    <div class="max-w-2xl mx-auto relative z-10">
+      <header
+        class="mb-8 text-center bg-white border-4 border-black p-6 shadow-neo-lg rotate-1 transition-transform hover:rotate-0"
+      >
+        <h1
+          class="text-4xl md:text-5xl font-black uppercase tracking-tighter italic"
+        >
+          TODO LIST
+        </h1>
+        <div
+          class="mt-2 text-sm font-bold bg-black text-white inline-block px-3 py-1 -rotate-2"
+        >
+          UM TUTORIAL EM CLOJURE
+        </div>
+      </header>
+
+      <div class="bg-white border-4 border-black p-6 md:p-8 shadow-neo-lg">
+        <form id="todoForm" class="flex flex-col sm:flex-row gap-4 mb-8">
+          <div class="relative flex-1">
+            <input
+              type="text"
+              id="todoInput"
+              placeholder="O que precisa ser feito hoje?"
+              class="w-full h-14 px-4 bg-gray-50 border-4 border-black text-lg font-bold placeholder:text-gray-500 focus:outline-none focus:bg-neo-yellow transition-colors"
+              autocomplete="off"
+            />
+          </div>
+          <button
+            type="submit"
+            class="h-14 px-8 bg-neo-red border-4 border-black text-black font-black uppercase tracking-wide shadow-neo hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2 group"
+          >
+            <i
+              data-lucide="plus"
+              class="w-6 h-6 group-hover:rotate-90 transition-transform"
+            ></i>
+            Adicionar
+          </button>
+        </form>
+
+        <div
+          class="flex justify-between items-center mb-6 border-b-4 border-black pb-4"
+        >
+          <div class="text-sm font-bold uppercase">
+            Tarefas: <span id="totalCount">0</span>
+          </div>
+          <div
+            class="text-sm font-bold uppercase bg-neo-green px-2 py-1 border-2 border-black"
+          >
+            Feitas: <span id="doneCount">0</span>
+          </div>
+        </div>
+
+        <ul id="todoList" class="space-y-4"></ul>
+
+        <div
+          id="emptyState"
+          class="hidden text-center py-12 text-gray-500 border-2 border-dashed border-gray-400 bg-gray-50 font-bold"
+        >
+          SEM TAREFAS. VAMOS ADICIONAR!
+        </div>
+      </div>
+
+      <footer class="mt-8 text-center">
+        <p
+          className="text-black font-bold text-sm bg-white inline-block px-4 py-2 border-2 border-black shadow-neo-sm"
+        >
+          FEITO POR: TIAGO DE LIMA
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      let todos = [
+        { id: "1", text: "Aprender Clojure", completed: false },
+        { id: "2", text: "Fazer um todo-list", completed: true },
+        { id: "3", text: "Aprender html e css", completed: false },
+      ];
+
+      const todoForm = document.getElementById("todoForm");
+      const todoInput = document.getElementById("todoInput");
+      const todoList = document.getElementById("todoList");
+      const emptyState = document.getElementById("emptyState");
+      const totalCountSpan = document.getElementById("totalCount");
+      const doneCountSpan = document.getElementById("doneCount");
+
+      function render() {
+        todoList.innerHTML = "";
+
+        if (todos.length === 0) {
+          emptyState.classList.remove("hidden");
+        } else {
+          emptyState.classList.add("hidden");
+
+          todos.forEach((todo) => {
+            const li = document.createElement("li");
+            li.className = `todo-item group flex items-center gap-3 p-4 border-4 border-black transition-all duration-200 ${
+              todo.completed
+                ? "bg-gray-100 opacity-80 completed"
+                : "bg-white hover:-translate-y-1 hover:shadow-neo-sm"
+            }`;
+
+            li.innerHTML = `
+                        <button 
+                            onclick="toggleTodo('${todo.id}')"
+                            class="flex-shrink-0 w-8 h-8 border-4 border-black flex items-center justify-center transition-colors ${
+                              todo.completed
+                                ? "bg-black"
+                                : "bg-white hover:bg-gray-200"
+                            }"
+                        >
+                            ${
+                              todo.completed
+                                ? '<i data-lucide="check" class="w-5 h-5 text-white stroke-[4]"></i>'
+                                : ""
+                            }
+                        </button>
+
+                        <span class="todo-text flex-1 text-lg font-bold truncate transition-all ${
+                          todo.completed ? "text-gray-500" : "text-black"
+                        }">
+                            ${escapeHtml(todo.text)}
+                        </span>
+
+                        <button 
+                            onclick="deleteTodo('${todo.id}')"
+                            class="opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 bg-neo-red border-2 border-black text-black hover:bg-red-500 transition-all hover:scale-110 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-none"
+                            aria-label="Delete todo"
+                        >
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    `;
+            todoList.appendChild(li);
+          });
+        }
+
+        totalCountSpan.textContent = todos.length;
+        doneCountSpan.textContent = todos.filter((t) => t.completed).length;
+
+        lucide.createIcons();
+      }
+
+      function addTodo(e) {
+        e.preventDefault();
+        const text = todoInput.value.trim();
+        if (!text) return;
+
+        const newTodo = {
+          id: Date.now().toString(),
+          text: text,
+          completed: false,
+        };
+
+        todos.push(newTodo);
+        todoInput.value = "";
+        render();
+      }
+
+      function toggleTodo(id) {
+        todos = todos.map((todo) =>
+          todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        );
+        render();
+      }
+
+      function deleteTodo(id) {
+        todos = todos.filter((todo) => todo.id !== id);
+        render();
+      }
+
+      function escapeHtml(unsafe) {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      todoForm.addEventListener("submit", addTodo);
+
+      render();
+      lucide.createIcons();
+    </script>
+  </body>
+</html>
