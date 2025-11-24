@@ -113,11 +113,43 @@ todo-list/
 - Verifique se o arquivo `todos.db` foi criado na raiz do projeto
 - Confirme que o backend tem permissão de escrita
 
-## Aprendizados Principais
+### Problemas com WSL2
+- Por padrão o xdg será utilizado, se não tiver configurado tente:
+**Criar um script wrapper para o navegador:**
 
-Este tutorial ensina:
-- Arquitetura full-stack funcional
-- Comunicação via API REST
-- Gerenciamento de estado reativo
-- Persistência de dados com SQL
-- Resolução de problemas comuns (CORS, formatos de dados)
+```bash
+mkdir -p ~/.local/bin
+
+nano ~/.local/bin/browser-wrapper.sh
+```
+
+**Dentro do script:**
+
+```bash
+#!/bin/sh
+
+# Tenta abre no navegador padrão do Windows
+if command -v wslview &> /dev/null; then
+    exec wslview "$@"
+elif [ -f "/mnt/c/Windows/System32/cmd.exe" ]; then
+    exec /mnt/c/Windows/System32/cmd.exe /c start "$@"
+else
+    exec xdg-open "$@"
+fi
+```
+
+**Torne o script executável:**
+
+```bash
+chmod +x ~/.local/bin/browser-wrapper.sh
+```
+
+**Configurar a variável BROWSER no `.bashrc` ou `.zshrc`:**
+
+```bash
+echo 'export BROWSER=~/.local/bin/browser-wrapper.sh' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### start.sh e stop.sh não estão funcionando
+- Considere dar permissão usando ```chmod +x ./start.sh``` e ```chmod +x ./stop.sh```
